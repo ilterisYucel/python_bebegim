@@ -1,4 +1,4 @@
-# care_python
+# python_bebegim
 Mayınlardan python ile kurtulun.
 Mayın tarlası benzeri bir oyun ile python bilginizi tazeleyin.
 --------------------------------------------------------------
