@@ -24,7 +24,7 @@ Ayrıca python3x için tkinter sürümü gereklidir.
 #### İndirme ve Çalıştırma
 1. Programı indirin ve zip dosyasını bir klasöre açın.
 2. Açtığınız klasöre terminalden 'cd' komutu vasıtasıyla ulaşın.
-3.linux için python3 care_python.py
+3. Linux için python3 care_python.py
 windows için python.exe care_python.py şeklinde çalıştırın.
 ---------------------------------------------------------------
 
