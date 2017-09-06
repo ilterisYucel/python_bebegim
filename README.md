@@ -7,7 +7,6 @@ Oyunda temel olarak 3 tip buton bulunur.
 1. X butonları.
 2. B butonları.
 3. ? butonları.
-
 X tip butonlar size 1 puan kazandırır.
 B tip butonlarda size basit bir kodun
 çıktısı sorulur.20 saniyede cevaplamanız gerekir.
