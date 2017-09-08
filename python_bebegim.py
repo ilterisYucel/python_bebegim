@@ -11,7 +11,7 @@ TIP_1 = ("Helvetica", 24)
 K_TIP_1 = ("Helvetica", 12)
 YOL = ".{}SoruDosyaları".format(os.sep)
 
-class CarePython(tk.Tk):
+class PythonBebegim(tk.Tk):
     "Mayınlardan python ile kurtulun."
     def __init__(self, *args, **kwargs):
         """Kontrol sınıfının yapılandırıcı fonksiyonudur.
@@ -104,8 +104,12 @@ class Oyun(tk.Frame):
     """Oyunun yaratıldığı sınıftır."""
     def __init__(self, tasiyici, kontrolcu):
         super().__init__(tasiyici)
+        
+        self.kontrolcu = kontrolcu
+        
         self.harita = Islemler.son_haritayi_bul()
-        self.buton_sayisi = 64
+        self.buton_sayisi = Islemler.satir_sutun(self.harita)
+        self.buton_takibi()#buton sayisini kontrol eder.
 
         self.puan_etiketi = tk.Label(self, text= "0", font=TIP_1)
         self.puan_etiketi.grid(row=0, column=0, columnspan=3)
@@ -113,8 +117,8 @@ class Oyun(tk.Frame):
         self.tarla_tasiyici = tk.Frame(self, padx=10, pady=10)
         self.tarla_tasiyici.grid(row=1, column=0, columnspan=3)
         
-        for r  in range(8):
-            for c in range(8):
+        for r  in range(len(self.harita)):
+            for c in range(self.buton_sayisi // len(self.harita)):
                 if self.harita[r][c] == 'x':
                     bos_buton = tk.Button(self.tarla_tasiyici, 
                                    relief=tk.RAISED, width=2,
@@ -141,72 +145,26 @@ class Oyun(tk.Frame):
         self.donus_butonu = tk.Button(self, text='Ana Sayfa',
                                 relief=tk.RAISED, width=10,
                                 borderwidth=2,
-                                command=lambda: 
-                                kontrolcu.cerceve_goster('AnaSayfa'))
+                                command=self.sayfa_gecisi)
         self.donus_butonu.grid(row=2, column= 0)
         
         self.yenile_butonu = tk.Button(self, text="Oyunu Yenile", 
                                 relief=tk.RAISED, width=10, 
                                 borderwidth=2, 
                                 command=lambda: 
-                                kontrolcu.sayfa_yenile(['Oyun']))
+                                self.kontrolcu.sayfa_yenile(['Oyun']),
+                                state=tk.DISABLED)
         self.yenile_butonu.grid(row=2, column=2)
         
         
     
     def soru_butonu(self, buton):
+        """Bir Toplevel sayfası oluşturur ve
+soru ile tamamlanacak betiği gösterir.60 saniye açık kalır.
+Soru cevaplanmadan sayfa kapatılırsa, oyunu sıfırlar."""
         buton['state'] = tk.DISABLED
         buton['text'] = '?'
-        sayfa = tk.Toplevel(self)
-        sayfa.wm_title("?")
-        sayfa.resizable(width=False, height=False)
-        
-        kro = Kronometre(sayfa, 60, "self.tasiyici.destroy()")
-        kro.grid(row=4, column=0)
-        
-        soru_dosyasi = Islemler.dosya_sec()
-        soru, betik = Islemler.dosya_formatlayici(soru_dosyasi)
-        yrm = Islemler.yorumlayici_bul()
-        
-        soru_etiketi = tk.Label(sayfa, text=soru,justify=tk.LEFT)
-        soru_etiketi.grid(row=1, column=0)
-        
-        kod_girisi = tk.Text(sayfa,background="black",
-                             foreground="yellow", 
-                             insertbackground="yellow")
-        kod_girisi.grid(row=2, column=0)
-        kod_girisi.insert(tk.END, betik)
-        
-        def tab(arg):
-            print("tab pressed")
-            kod_girisi.insert(tk.INSERT, " " * 4)
-            return 'break'
-        kod_girisi.bind("<Tab>", tab)
-
-        
-        def islem():
-            kullanıcı_kodu = kod_girisi.get("1.0", tk.END)
-            Islemler.cevap_dosyasi(kullanıcı_kodu)
-            kullanici_dosyasi = os.path.join(YOL, "cevap.py")
-            cozum_cıktısı = Islemler.betik_islet([yrm, soru_dosyasi])
-            k_cıktısı = Islemler.betik_islet([yrm, kullanici_dosyasi])
-            if cozum_cıktısı[0] == k_cıktısı[0]:
-                sonuc_etiketi = tk.Label(sayfa, font=K_TIP_1)
-                sonuc_etiketi["text"] = "DOĞRU"
-                sonuc_etiketi.grid(row=0, column=0)
-                self.puan_etiketi["text"] = str(eval(
-                                self.puan_etiketi["text"]) + kro.sure)
-                
-            else:
-                sonuc_etiketi = tk.Label(sayfa, font=K_TIP_1)
-                sonuc_etiketi["text"] = "YANLIŞ"
-                sonuc_etiketi.grid(row=0, column=0)
-                
-                
-            
-        islem_butonu = tk.Button(sayfa, text="Derle",
-                                 relief=tk.RAISED, command=islem)
-        islem_butonu.grid(row=3, column=0)
+        soru = SoruToplevel(self, self.kontrolcu)
         self.buton_sayisi -= 1
 
     
@@ -222,6 +180,17 @@ class Oyun(tk.Frame):
                                         self.puan_etiketi["text"]) + 1)
         
         self.buton_sayisi -= 1
+        
+    def sayfa_gecisi(self):
+        self.kontrolcu.sayfa_yenile(['Oyun'])
+        self.kontrolcu.cerceve_goster('AnaSayfa')
+        
+    def buton_takibi(self):
+        if self.buton_sayisi <= 0:
+            self.yenile_butonu.config(state="normal")
+        else:
+            self.after(1000,self.buton_takibi)
+            
 
 class Ogretici(tk.Frame):
     def __init__(self, parent, controller):
@@ -459,8 +428,8 @@ def harf_sayici(kelime):
 harf_sayici("çekoslovakyalılaştıramadıklarımızdanmısınız")"""
 
         soru8 = """
-#[[12, 15, 27]
-# [20, 22, 45]
+#[[12, 15, 27],
+# [20, 22, 45],
 # [8, 10, 97]] 2 boyutlu listesinden 5'e
 #tam bölünebilen sayıları bulup yazdıran aşağıdaki
 #programı tamamlayınız.
@@ -514,7 +483,7 @@ siler."""
                 if rnd.randint(0,10) % 2 == 0:
                     betik += satir
                 else:
-                    betik += "<-------->" + os.linesep
+                    betik += "Bu satır silinmiştir." + os.linesep
         dosya_nesnesi.close()
                 
         return soru_metni, betik
@@ -530,31 +499,134 @@ dosyayı seçer ve okunmak için döndürür."""
         
     @classmethod    
     def cevap_dosyasi(cls, metin):
+        "cevap dosyası oluşturur ve metni içine yazar."
         dosya = open(os.path.join(YOL, "cevap.py"), 'w')
         dosya.write(metin)
         dosya.close()
         
+    @classmethod
+    def satir_sutun(cls, iki_boyutlu_liste):
+        "verilen 2 boyutlu listenin eleman sayısını bulur."
+        toplam = 0
+        for satir in iki_boyutlu_liste:
+            for sutun in satir:
+                toplam += 1
+        
+        return toplam
+        
+        
+        
 class Kronometre(tk.Label):
-    def __init__(self, tasiyici, sure, eylem):
+    """Kronometre sınıfı.Bir taşıyıcının üstüne
+yapıştırılıp, istenilen süreyi tutar.Girilen
+sürenin sonunda string olarak girilen komutları
+çalıştırır."""
+    def __init__(self, tasiyici, sure, eylem, font=TIP_1):
         super().__init__(tasiyici)
         self.tasiyici = tasiyici
         self.sure = sure
         self.eylem = eylem
         self["text"] = self.sure
-        self["font"] = TIP_1
+        self["font"] = font
         self.islem()
     
     def islem(self):
+        """Girilen süre dolduğunda girilen kodları
+çalıştırır."""
         if self.sure <= 0:
             exec(self.eylem)
         else:
             self.configure(text="{}".format(self.sure))
             self.sure -= 1
+            #süre değişimini etiket üstünde
+            #gösterebilmek için taşıyıcısını günceller.
             self.tasiyici.after(1000, self.islem)
-            
-            
         
+class SoruToplevel(tk.Toplevel):
+    def __init__(self, tasiyici, kontrolcu):
+        super().__init__(tasiyici)
+        
+        self.kontrolcu = kontrolcu
+        self.tasiyici = tasiyici
+        
+        self.wm_title("?")
+        self.resizable(width=False, height=False)#boyutu sabitle
+        #eğer sayfa kapatılırsa oyunu sıfırla
+        self.protocol("WM_DELETE_WINDOW", self.kapatma_la)
+        
+        self.kro = Kronometre(self, 60, "self.tasiyici.kapatma_la()")
+        self.kro.grid(row=3, column=0)
+        
+        self.soru_dosyasi = Islemler.dosya_sec()
+        #soru metni ile betik ayrılır ve betiğin bazı satırları silinir.
+        soru, betik = Islemler.dosya_formatlayici(self.soru_dosyasi)
+        self.yrm = Islemler.yorumlayici_bul()#yorumlayıci bul
+        
+        self.soru_etiketi = tk.Label(self, text=soru,justify=tk.LEFT)
+        self.soru_etiketi.grid(row=0, column=0)
+        
+        self.kod_girisi = tk.Text(self,background="black",
+                             foreground="yellow", 
+                             insertbackground="yellow")
+        self.kod_girisi.grid(row=1, column=0)
+        self.kod_girisi.insert(tk.END, betik)
+        self.kod_girisi.bind("<Tab>", self.tab)
+        
+        self.islem_butonu = tk.Button(self, text="Derle",
+                                 relief=tk.RAISED, command=self.islem)
+        self.islem_butonu.grid(row=2, column=0)
+        
+    def tab(self, arg):
+        #print("tab pressed")
+        self.kod_girisi.insert(tk.INSERT, " " * 4)
+        return 'break'
+        #kod giriş yerinde tab tuşunun sinyallerini
+        #yakalar ve tab tuşunu çalıştırır.
+        
+        
+    def islem(self):
+        kullanıcı_kodu = self.kod_girisi.get("1.0", tk.END)
+        Islemler.cevap_dosyasi(kullanıcı_kodu)
+        kullanici_dosyasi = os.path.join(YOL, "cevap.py")
+        cozum_cıktısı = Islemler.betik_islet([self.yrm, 
+                                              self.soru_dosyasi])
+        k_cıktısı = Islemler.betik_islet([self.yrm, kullanici_dosyasi])
+        if cozum_cıktısı[0] == k_cıktısı[0]:
+            #kalan süre kadar puan ekle
+            self.tasiyici.puan_etiketi["text"] = str(eval(
+                    self.tasiyici.puan_etiketi["text"]) + self.kro.sure)
+            yirttin = YirttinToplevel(self.tasiyici, self.kontrolcu)
+            self.destroy()
+                
+        else:
+            self.kapatma_la()
+            
+    def kapatma_la(self):
+        self.destroy()
+        self.kontrolcu.sayfa_yenile(["Oyun"])
+        boom = BoomToplevel(self.tasiyici, self.kontrolcu)
+        
+        
+class BoomToplevel(tk.Toplevel):
+    def __init__(self, tasiyici, kontrolcu):
+        super().__init__(tasiyici)
+        
+        self.tasiyici = tasiyici
+        self.kontrolcu = kontrolcu
+        
+        self.etiket = tk.Label(self, text="BOOOOOOOOOM!", font=TIP_1)
+        self.etiket.pack()
+        
+class YirttinToplevel(tk.Toplevel):
+    def __init__(self, tasiyici, kontrolcu):
+        super().__init__(tasiyici)
+        
+        self.tasiyici = tasiyici
+        self.kontrolcu = kontrolcu
+        
+        self.etiket = tk.Label(self, text="HADİ YIRTTIN!", font=TIP_1)
+        self.etiket.pack()
         
 if __name__ == "__main__":
-    app = CarePython()
+    app = PythonBebegim()
     app.mainloop()
