@@ -9,7 +9,11 @@ import platform as plt
 TIP = ("Verdana", 12)
 TIP_1 = ("Helvetica", 24)
 K_TIP_1 = ("Helvetica", 12)
-YOL = ".{}SoruDosyaları".format(os.sep)
+YOL = ".{}harici_dosyalar".format(os.sep)
+YOL_1 = ".{}harici_dosyalar{}mayın_soruları".format(os.sep, os.sep)
+YOL_2 = ".{}harici_dosyalar{}bonus_soruları".format(os.sep, os.sep)
+YOL_3 = ".{}harici_dosyalar{}kullanıcı_dosyaları".format(os.sep, os.sep)
+YOL_4 = ".{}görseller".format(os.sep)
 
 class PythonBebegim(tk.Tk):
     "Mayınlardan python ile kurtulun."
@@ -317,10 +321,12 @@ python yorumlayıcısı python.exe olarak tutulur."""
         """programın kullanacağı dosya ve klasörleri
 denetler.Eğer varlarsa, işleme devam eder.Yoksa gerekli klasörleri
 ve dosyaları oluşturur."""
-        if os.path.exists(YOL):
-            pass
-        else:
-            os.mkdir(YOL)
+        klasor_listesi = [YOL, YOL_1, YOL_2, YOL_3]
+        for klasor in klasor_listesi:
+            if os.path.exists(klasor):
+                pass
+            else:
+                os.mkdir(klasor)
         
         dosya_listesi = ["soru0.py", "soru1.py", "soru2.py", "soru3.py",
                          "soru4.py", "soru5.py", "soru6.py", "soru7.py",
@@ -453,10 +459,10 @@ print("{}. sıradaki fibonacci sayısı {}.".format(10, fibonacci_bul(10)))
 """
         
         for dosya in dosya_listesi:
-            if os.path.exists(YOL + os.sep + dosya):
+            if os.path.exists(YOL_1 + os.sep + dosya):
                 pass
             else:
-                yeni_dosya = open(YOL + os.sep + dosya, 'w')
+                yeni_dosya = open(YOL_1 + os.sep + dosya, 'w')
                 yeni_dosya.write(eval(dosya[0:5]))
                 yeni_dosya.close()
         
@@ -492,15 +498,15 @@ siler."""
     def dosya_sec(cls):
         """soru dosyaları arasından rastgele bir
 dosyayı seçer ve okunmak için döndürür."""
-        dosya_listesi = os.listdir(YOL)
+        dosya_listesi = os.listdir(YOL_1)
         rastgele_dosya = rnd.choice(dosya_listesi)
         
-        return os.path.join(YOL, rastgele_dosya)
+        return os.path.join(YOL_1, rastgele_dosya)
         
     @classmethod    
     def cevap_dosyasi(cls, metin):
         "cevap dosyası oluşturur ve metni içine yazar."
-        dosya = open(os.path.join(YOL, "cevap.py"), 'w')
+        dosya = open(os.path.join(YOL_3, "cevap.py"), 'w')
         dosya.write(metin)
         dosya.close()
         
@@ -536,11 +542,11 @@ sürenin sonunda string olarak girilen komutları
         if self.sure <= 0:
             exec(self.eylem)
         else:
-            self.configure(text="{}".format(self.sure))
+            self["text"] = self.sure
             self.sure -= 1
             #süre değişimini etiket üstünde
             #gösterebilmek için taşıyıcısını günceller.
-            self.tasiyici.after(1000, self.islem)
+            self.after(1000, self.islem)
         
 class SoruToplevel(tk.Toplevel):
     def __init__(self, tasiyici, kontrolcu):
@@ -552,9 +558,9 @@ class SoruToplevel(tk.Toplevel):
         self.wm_title("?")
         self.resizable(width=False, height=False)#boyutu sabitle
         #eğer sayfa kapatılırsa oyunu sıfırla
-        self.protocol("WM_DELETE_WINDOW", self.kapatma_la)
+        self.protocol("WM_DELETE_WINDOW", self.patlama)
         
-        self.kro = Kronometre(self, 60, "self.tasiyici.kapatma_la()")
+        self.kro = Kronometre(self, 60, "self.tasiyici.patlama()")
         self.kro.grid(row=3, column=0)
         
         self.soru_dosyasi = Islemler.dosya_sec()
@@ -587,7 +593,7 @@ class SoruToplevel(tk.Toplevel):
     def islem(self):
         kullanıcı_kodu = self.kod_girisi.get("1.0", tk.END)
         Islemler.cevap_dosyasi(kullanıcı_kodu)
-        kullanici_dosyasi = os.path.join(YOL, "cevap.py")
+        kullanici_dosyasi = os.path.join(YOL_3, "cevap.py")
         cozum_cıktısı = Islemler.betik_islet([self.yrm, 
                                               self.soru_dosyasi])
         k_cıktısı = Islemler.betik_islet([self.yrm, kullanici_dosyasi])
@@ -595,37 +601,40 @@ class SoruToplevel(tk.Toplevel):
             #kalan süre kadar puan ekle
             self.tasiyici.puan_etiketi["text"] = str(eval(
                     self.tasiyici.puan_etiketi["text"]) + self.kro.sure)
-            yirttin = YirttinToplevel(self.tasiyici, self.kontrolcu)
-            self.destroy()
+            self.sayfayi_temizle()
+            
+            self.foto = tk.PhotoImage(file=os.path.join(YOL_4, 
+                                                   "tebrik.gif"))
+            self.etiket = tk.Label(self, image=self.foto)
+            self.etiket.pack()
+            
+            self.buton = tk.Button(self, text="kapat", 
+                               command=self.sayfayi_kapat)
+            self.buton.pack()
                 
         else:
-            self.kapatma_la()
+            self.patlama()
             
-    def kapatma_la(self):
-        self.destroy()
+    def patlama(self):
+        self.sayfayi_temizle()
         self.kontrolcu.sayfa_yenile(["Oyun"])
-        boom = BoomToplevel(self.tasiyici, self.kontrolcu)
         
-        
-class BoomToplevel(tk.Toplevel):
-    def __init__(self, tasiyici, kontrolcu):
-        super().__init__(tasiyici)
-        
-        self.tasiyici = tasiyici
-        self.kontrolcu = kontrolcu
-        
-        self.etiket = tk.Label(self, text="BOOOOOOOOOM!", font=TIP_1)
+        self.foto = tk.PhotoImage(file=os.path.join(YOL_4, 
+                                                    "patlama.gif"))
+        self.etiket = tk.Label(self, image=self.foto)
         self.etiket.pack()
         
-class YirttinToplevel(tk.Toplevel):
-    def __init__(self, tasiyici, kontrolcu):
-        super().__init__(tasiyici)
-        
-        self.tasiyici = tasiyici
-        self.kontrolcu = kontrolcu
-        
-        self.etiket = tk.Label(self, text="HADİ YIRTTIN!", font=TIP_1)
-        self.etiket.pack()
+        self.buton = tk.Button(self, text="kapat", 
+                               command=self.sayfayi_kapat)
+        self.buton.pack()
+    
+    def sayfayi_temizle(self):
+        for w in self.winfo_children():
+            w.destroy()
+    
+    def sayfayi_kapat(self):
+        self.destroy()
+
         
 if __name__ == "__main__":
     app = PythonBebegim()
