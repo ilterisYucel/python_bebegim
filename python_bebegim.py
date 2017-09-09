@@ -190,9 +190,12 @@ Soru cevaplanmadan sayfa kapatılırsa, oyunu sıfırlar."""
         self.kontrolcu.cerceve_goster('AnaSayfa')
         
     def buton_takibi(self):
+        """Aktif buton sayısını kontrol eder.
+Eğer aktif buton sayısı 0'a indiyse oyunu yeniler."""
         if self.buton_sayisi <= 0:
             self.yenile_butonu.config(state="normal")
         else:
+            #Her program döngüsünde 1000 kere çalıştır.
             self.after(1000,self.buton_takibi)
             
 
@@ -463,6 +466,8 @@ print("{}. sıradaki fibonacci sayısı {}.".format(10, fibonacci_bul(10)))
                 pass
             else:
                 yeni_dosya = open(YOL_1 + os.sep + dosya, 'w')
+                #dosya adının ilk 5 harfi eval ile
+                #tanımlanmış değişkenlere çevrilir.
                 yeni_dosya.write(eval(dosya[0:5]))
                 yeni_dosya.close()
         
@@ -547,8 +552,14 @@ sürenin sonunda string olarak girilen komutları
             #süre değişimini etiket üstünde
             #gösterebilmek için taşıyıcısını günceller.
             self.after(1000, self.islem)
+    
+    def stop(self):
+        #sürenin son değerini sabitler.
+        self["text"] = self.sure
         
 class SoruToplevel(tk.Toplevel):
+    """ '?' butonları için gereken toplevel sınıfıdır.
+Kullanıcıya sorulacak soru ve kullanıcı girişi burada bulunur."""
     def __init__(self, tasiyici, kontrolcu):
         super().__init__(tasiyici)
         
@@ -576,6 +587,8 @@ class SoruToplevel(tk.Toplevel):
                              insertbackground="yellow")
         self.kod_girisi.grid(row=1, column=0)
         self.kod_girisi.insert(tk.END, betik)
+        #kod giriş yerinde tab tuşunun sinyallerini
+        #yakalar ve tab fonksiyonunu çalıştırır.
         self.kod_girisi.bind("<Tab>", self.tab)
         
         self.islem_butonu = tk.Button(self, text="Derle",
@@ -583,14 +596,19 @@ class SoruToplevel(tk.Toplevel):
         self.islem_butonu.grid(row=2, column=0)
         
     def tab(self, arg):
+        """Metin giriş yerinde python girintileme
+yapısına uygun tab boşluklarını oluşturur."""
         #print("tab pressed")
         self.kod_girisi.insert(tk.INSERT, " " * 4)
         return 'break'
-        #kod giriş yerinde tab tuşunun sinyallerini
-        #yakalar ve tab tuşunu çalıştırır.
         
         
     def islem(self):
+        """
+Kullanıcının tamamladığı kod metnini çeker ve bunu
+bir betik dosyasına kaydeder.Sonra betik_islet fonksiyonu
+ile kullancının girdiyse oluşan betiği ve ana betiği
+karşılaştırır."""
         kullanıcı_kodu = self.kod_girisi.get("1.0", tk.END)
         Islemler.cevap_dosyasi(kullanıcı_kodu)
         kullanici_dosyasi = os.path.join(YOL_3, "cevap.py")
@@ -602,7 +620,7 @@ class SoruToplevel(tk.Toplevel):
             self.tasiyici.puan_etiketi["text"] = str(eval(
                     self.tasiyici.puan_etiketi["text"]) + self.kro.sure)
             self.sayfayi_temizle()
-            
+            #görüntülenecek fotoğrafı oluştur.
             self.foto = tk.PhotoImage(file=os.path.join(YOL_4, 
                                                    "tebrik.gif"))
             self.etiket = tk.Label(self, image=self.foto)
@@ -629,6 +647,7 @@ class SoruToplevel(tk.Toplevel):
         self.buton.pack()
     
     def sayfayi_temizle(self):
+        "sayfadaki tüm eşyaları siler."
         for w in self.winfo_children():
             w.destroy()
     
