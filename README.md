@@ -1,7 +1,8 @@
 # python_bebegim
+--------------------------------------------------------------
 Mayınlardan python ile kurtulun.
 Mayın tarlası benzeri bir oyun ile python bilginizi tazeleyin.
---------------------------------------------------------------
+
 ## Özellikler
 Oyunda temel olarak 3 tip buton bulunur.
 1. X butonları.
@@ -26,7 +27,7 @@ Ayrıca python3x için tkinter sürümü gereklidir.
 2. Açtığınız klasöre terminalden 'cd' komutu vasıtasıyla ulaşın.
 3. Linux için python3 care_python.py
 windows için python.exe care_python.py şeklinde çalıştırın.
----------------------------------------------------------------
+
 
 
 
